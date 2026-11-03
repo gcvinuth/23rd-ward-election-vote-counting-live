@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>లైవ్ కౌంటింగ్ - 23వ డివిజన్/వార్డు, నెల్లూరు</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Noto Sans Telugu -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans Telugu', sans-serif;
+            background-color: #f8fafc;
+        }
+        .pulse-red {
+            animation: pulse-animation 2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                    <i class="fa-solid fa-check-to-slot"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold leading-tight text-slate-900">నెల్లూరు మున్సిపల్ కార్పొరేషన్ (NMC)</h1>
+                    <p class="text-xs text-slate-500 font-medium">23వ వార్డు / డివిజన్ • ఓట్ల లెక్కింపు లైవ్ పోర్టల్</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-red"></span>
+                    <span>లైవ్ కౌంటింగ్ (LIVE)</span>
+                </div>
+                <button onclick="toggleAutoSimulate()" id="simBtn" class="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-md font-medium transition">
+                    <i class="fa-solid fa-arrows-rotate text-slate-500"></i>
+                    <span id="simBtnText">ఆటో అప్‌డేట్ ఆపు</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-8">
+
+        <!-- Ward Info Banner -->
+        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between text-xs text-indigo-900 gap-2">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-location-dot text-indigo-600 text-base"></i>
+                <span class="font-semibold">23వ డివిజన్/వార్డు ప్రాంతాలు:</span>
+                <span>ఎలమవారిదిన్నె, మెట్టపాలెం, ఎన్టీఆర్ నగర్, చెరుకుతోట, బలిజపాలెం</span>
+            </div>
+            <div class="flex items-center space-x-3 text-indigo-700 font-medium">
+                <span>పిన్ కోడ్: 524003</span>
+                <span>•</span>
+                <span>అసెంబ్లీ: నెల్లూరు సిటీ</span>
+            </div>
+        </div>
+
+        <!-- Notification / Toast Alert Modal -->
+        <div id="toastAlert" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs px-4 py-3 rounded-lg shadow-lg flex items-center space-x-3 transition-opacity">
+            <i class="fa-solid fa-circle-info text-indigo-400"></i>
+            <span id="toastMessage">నోటిఫికేషన్ మెసేజ్</span>
+        </div>
+
+        <!-- Status Overview Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">మొత్తం పోలైన ఓట్లు</p>
+                <h3 class="text-2xl font-bold text-slate-900 mt-1" id="totalVotesPolled">5,840</h3>
+                <div class="mt-2 text-xs text-slate-500 flex items-center justify-between">
+                    <span>పోలింగ్ శాతం</span>
+                    <span class="font-semibold text-slate-700">76.8%</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">లెక్కించిన ఓట్లు</p>
+                <h3 class="text-2xl font-bold text-slate-900 mt-1" id="totalVotesCounted">4,150</h3>
+                <div class="mt-2 text-xs text-slate-500 flex items-center justify-between">
+                    <span>పూర్తయిన శాతం</span>
+                    <span class="font-semibold text-indigo-600" id="progressPercentage">71.1%</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">రౌండ్ల వివరాలు</p>
+                <h3 class="text-2xl font-bold text-slate-900 mt-1" id="roundStatus">రౌండ్ 3 / 4</h3>
+                <div class="mt-2 text-xs text-slate-500 flex items-center justify-between">
+                    <span>ప్రస్తుత రౌండ్</span>
+                    <span class="font-semibold text-amber-600">రౌండ్ 4 నడుస్తోంది</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">మెజారిటీ / ఆధిక్యం</p>
+                <h3 class="text-2xl font-bold text-emerald-600 mt-1" id="leadMargin">+280 ఓట్లు</h3>
+                <div class="mt-2 text-xs text-slate-500 flex items-center justify-between">
+                    <span>ఆధిక్యంలో ఉన్న అభ్యర్థి</span>
+                    <span class="font-semibold text-slate-800" id="leadingCandidateName">ఊటుకూరు చైతన్య</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Analytics & Comparison Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Left: Live Bar Graph Comparison -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">ఓట్ల పోలిక (Live Bar Graph)</h2>
+                        <p class="text-xs text-slate-500">23వ డివిజన్ అభ్యర్థుల ప్రత్యక్ష ఫలితాలు</p>
+                    </div>
+                    <span class="text-xs font-medium bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md" id="lastUpdated">
+                        ఇప్పుడే నవీకరించబడింది
+                    </span>
+                </div>
+
+                <!-- Canvas Chart -->
+                <div class="relative w-full h-72 sm:h-80 my-2">
+                    <canvas id="voteChart"></canvas>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
+                    <div class="flex items-center space-x-4">
+                        <span class="flex items-center"><span class="w-3 h-3 rounded-sm bg-blue-600 inline-block mr-1.5"></span> YSRCP</span>
+                        <span class="flex items-center"><span class="w-3 h-3 rounded-sm bg-yellow-500 inline-block mr-1.5"></span> TDP</span>
+                        <span class="flex items-center"><span class="w-3 h-3 rounded-sm bg-slate-400 inline-block mr-1.5"></span> ఇతరులు / NOTA</span>
+                    </div>
+                    <span>లెక్కింపు కేంద్రం: DKW కాలేజ్, నెల్లూరు</span>
+                </div>
+            </div>
+
+            <!-- Right: Candidate Detailed Cards -->
+            <div class="space-y-4 flex flex-col justify-between">
+                <div class="bg-white p-5 rounded-xl border-l-4 border-l-blue-600 border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="inline-block bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded tracking-wide mb-1">YSRCP</span>
+                            <h3 class="text-lg font-bold text-slate-900">ఊటుకూరు చైతన్య</h3>
+                            <p class="text-xs text-slate-500">వైయస్ఆర్ కాంగ్రెస్ పార్టీ</p>
+                        </div>
+                        <span id="badgeYsrcp" class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full">ఆధిక్యం (LEADING)</span>
+                    </div>
+                    <div class="mt-4 flex items-baseline justify-between">
+                        <div>
+                            <span class="text-3xl font-extrabold text-slate-900" id="votesYsrcp">2,080</span>
+                            <span class="text-xs text-slate-500 ml-1">ఓట్లు</span>
+                        </div>
+                        <span class="text-sm font-semibold text-slate-600" id="shareYsrcp">50.1%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                        <div id="barYsrcp" class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: 50.1%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border-l-4 border-l-yellow-500 border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="inline-block bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded tracking-wide mb-1">TDP</span>
+                            <h3 class="text-lg font-bold text-slate-900">TDP అభ్యర్థి</h3>
+                            <p class="text-xs text-slate-500">తెలుగుదేశం పార్టీ</p>
+                        </div>
+                        <span id="badgeTdp" class="bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-1 rounded-full">వెనుకబడి ఉన్నారు</span>
+                    </div>
+                    <div class="mt-4 flex items-baseline justify-between">
+                        <div>
+                            <span class="text-3xl font-extrabold text-slate-900" id="votesTdp">1,800</span>
+                            <span class="text-xs text-slate-500 ml-1">ఓట్లు</span>
+                        </div>
+                        <span class="text-sm font-semibold text-slate-600" id="shareTdp">43.4%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                        <div id="barTdp" class="bg-yellow-500 h-full rounded-full transition-all duration-500" style="width: 43.4%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border-l-4 border-l-slate-400 border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="inline-block bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded tracking-wide mb-1">OTHERS / NOTA</span>
+                            <h3 class="text-base font-bold text-slate-900">స్వతంత్రులు & NOTA</h3>
+                            <p class="text-xs text-slate-500">ఇతర అభ్యర్థులు</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <div>
+                            <span class="text-2xl font-bold text-slate-900" id="votesOthers">270</span>
+                            <span class="text-xs text-slate-500 ml-1">ఓట్లు</span>
+                        </div>
+                        <span class="text-sm font-semibold text-slate-600" id="shareOthers">6.5%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Round Wise Breakdown Table -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">రౌండ్ల వారీగా ఫలితాలు (Round Breakdown)</h3>
+                    <p class="text-xs text-slate-500">23వ వార్డు పోలింగ్ బూత్‌ల వారీగా వివరాలు</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-2 rounded-lg font-medium transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>రీసెట్</span>
+                    </button>
+                    <button onclick="simulateNextRound()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3.5 py-2 rounded-lg font-medium transition shadow-sm flex items-center space-x-1.5">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>తరువాతి రౌండ్ అప్‌డేట్</span>
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                            <th class="p-3.5 font-semibold">రౌండ్</th>
+                            <th class="p-3.5 font-semibold">ఊటుకూరు చైతన్య (YSRCP)</th>
+                            <th class="p-3.5 font-semibold">TDP అభ్యర్థి</th>
+                            <th class="p-3.5 font-semibold">ఇతరులు / NOTA</th>
+                            <th class="p-3.5 font-semibold">రౌండ్ మెజారిటీ</th>
+                            <th class="p-3.5 font-semibold">స్టేటస్</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roundTableBody" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Dynamic content filled via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            <p>© రాష్ట్ర ఎన్నికల సంఘం • నెల్లూరు మున్సిపల్ కార్పొరేషన్ (23వ డివిజన్)</p>
+            <p class="mt-1 text-slate-400">ఎలమవారిదిన్నె, మెట్టపాలెం, ఎన్టీఆర్ నగర్, చెరుకుతోట, బలిజపాలెం పరిసర ప్రాంతాల లెక్కింపు ఫలితాలు.</p>
+        </div>
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        const totalPolled = 5840;
+        let isAutoSimulating = true;
+        let autoInterval;
+
+        const initialCandidateData = {
+            ysrcp: { name: 'ఊటుకూరు చైతన్య', party: 'YSRCP', votes: 2080, color: '#2563eb' },
+            tdp: { name: 'TDP అభ్యర్థి', party: 'TDP', votes: 1800, color: '#eab308' },
+            others: { name: 'ఇతరులు / NOTA', party: 'OTH', votes: 270, color: '#94a3b8' }
+        };
+
+        const initialRoundData = [
+            { round: 1, ysrcp: 680, tdp: 610, others: 90 },
+            { round: 2, ysrcp: 710, tdp: 590, others: 85 },
+            { round: 3, ysrcp: 690, tdp: 600, others: 95 }
+        ];
+
+        let candidateData = JSON.parse(JSON.stringify(initialCandidateData));
+        let roundData = JSON.parse(JSON.stringify(initialRoundData));
+
+        let voteChart;
+
+        function showToast(message) {
+            const toast = document.getElementById('toastAlert');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Initialize Chart
+        function initChart() {
+            const ctx = document.getElementById('voteChart').getContext('2d');
+            voteChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['ఊటుకూరు చైతన్య (YSRCP)', 'TDP అభ్యర్థి', 'ఇతరులు / NOTA'],
+                    datasets: [{
+                        label: 'మొత్తం వచ్చిన ఓట్లు',
+                        data: [candidateData.ysrcp.votes, candidateData.tdp.votes, candidateData.others.votes],
+                        backgroundColor: ['#2563eb', '#eab308', '#94a3b8'],
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        barThickness: 45
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ఓట్లు: ${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Noto Sans Telugu, Inter' } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Noto Sans Telugu, Inter', weight: '500' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Dashboard Data UI
+        function updateDashboard() {
+            const totalCounted = candidateData.ysrcp.votes + candidateData.tdp.votes + candidateData.others.votes;
+            const progress = ((totalCounted / totalPolled) * 100).toFixed(1);
+            
+            // Stats Update
+            document.getElementById('totalVotesCounted').innerText = totalCounted.toLocaleString();
+            document.getElementById('progressPercentage').innerText = `${progress}%`;
+            document.getElementById('roundStatus').innerText = `రౌండ్ ${roundData.length} / 4`;
+
+            // Candidate Cards Update
+            document.getElementById('votesYsrcp').innerText = candidateData.ysrcp.votes.toLocaleString();
+            document.getElementById('votesTdp').innerText = candidateData.tdp.votes.toLocaleString();
+            document.getElementById('votesOthers').innerText = candidateData.others.votes.toLocaleString();
+
+            const shareYsrcp = totalCounted > 0 ? ((candidateData.ysrcp.votes / totalCounted) * 100).toFixed(1) : 0;
+            const shareTdp = totalCounted > 0 ? ((candidateData.tdp.votes / totalCounted) * 100).toFixed(1) : 0;
+            const shareOthers = totalCounted > 0 ? ((candidateData.others.votes / totalCounted) * 100).toFixed(1) : 0;
+
+            document.getElementById('shareYsrcp').innerText = `${shareYsrcp}%`;
+            document.getElementById('shareTdp').innerText = `${shareTdp}%`;
+            document.getElementById('shareOthers').innerText = `${shareOthers}%`;
+
+            document.getElementById('barYsrcp').style.width = `${shareYsrcp}%`;
+            document.getElementById('barTdp').style.width = `${shareTdp}%`;
+
+            // Calculate Lead
+            const margin = Math.abs(candidateData.ysrcp.votes - candidateData.tdp.votes);
+            const isYsrcpLeading = candidateData.ysrcp.votes >= candidateData.tdp.votes;
+            const leaderName = isYsrcpLeading ? candidateData.ysrcp.name : candidateData.tdp.name;
+
+            document.getElementById('leadMargin').innerText = `+${margin.toLocaleString()} ఓట్లు`;
+            document.getElementById('leadingCandidateName').innerText = leaderName;
+
+            // Update Badges
+            const badgeYsrcp = document.getElementById('badgeYsrcp');
+            const badgeTdp = document.getElementById('badgeTdp');
+            
+            if (isYsrcpLeading) {
+                badgeYsrcp.className = 'bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full';
+                badgeYsrcp.innerText = 'ఆధిక్యం (LEADING)';
+                badgeTdp.className = 'bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-1 rounded-full';
+                badgeTdp.innerText = 'వెనుకబడి ఉన్నారు';
+            } else {
+                badgeTdp.className = 'bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full';
+                badgeTdp.innerText = 'ఆధిక్యం (LEADING)';
+                badgeYsrcp.className = 'bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-1 rounded-full';
+                badgeYsrcp.innerText = 'వెనుకబడి ఉన్నారు';
+            }
+
+            // Update Chart Data
+            if (voteChart) {
+                voteChart.data.datasets[0].data = [
+                    candidateData.ysrcp.votes,
+                    candidateData.tdp.votes,
+                    candidateData.others.votes
+                ];
+                voteChart.update();
+            }
+
+            // Timestamp Update
+            document.getElementById('lastUpdated').innerText = `అప్‌డేట్ చేసిన సమయం: ${new Date().toLocaleTimeString('te-IN')}`;
+
+            // Populate Table
+            renderTable();
+        }
+
+        // Render Table Data
+        function renderTable() {
+            const tbody = document.getElementById('roundTableBody');
+            tbody.innerHTML = '';
+
+            roundData.forEach(r => {
+                const margin = r.ysrcp - r.tdp;
+                const marginText = margin > 0 ? `+${margin} (YSRCP)` : margin < 0 ? `+${Math.abs(margin)} (TDP)` : 'సమం (TIED)';
+                const marginColor = margin > 0 ? 'text-blue-600' : margin < 0 ? 'text-yellow-600' : 'text-slate-500';
+
+                const row = `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3.5 font-semibold text-slate-900">రౌండ్ ${r.round}</td>
+                        <td class="p-3.5 text-blue-700 font-medium">${r.ysrcp.toLocaleString()}</td>
+                        <td class="p-3.5 text-yellow-700 font-medium">${r.tdp.toLocaleString()}</td>
+                        <td class="p-3.5 text-slate-500">${r.others.toLocaleString()}</td>
+                        <td class="p-3.5 font-semibold ${marginColor}">${marginText}</td>
+                        <td class="p-3.5"><span class="bg-emerald-50 text-emerald-700 text-xs font-medium px-2 py-0.5 rounded border border-emerald-200">పూర్తయింది</span></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Simulate Next Round Function (4 rounds total)
+        function simulateNextRound() {
+            if (roundData.length >= 4) {
+                showToast('23వ డివిజన్‌కు చెందిన మొత్తం 4 రౌండ్ల లెక్కింపు పూర్తయింది!');
+                clearInterval(autoInterval);
+                return;
+            }
+
+            const nextRoundNum = roundData.length + 1;
+            const addYsrcp = 830;
+            const addTdp = 770;
+            const addOthers = 90;
+
+            candidateData.ysrcp.votes += addYsrcp;
+            candidateData.tdp.votes += addTdp;
+            candidateData.others.votes += addOthers;
+
+            roundData.push({
+                round: nextRoundNum,
+                ysrcp: addYsrcp,
+                tdp: addTdp,
+                others: addOthers
+            });
+
+            updateDashboard();
+            showToast(`రౌండ్ ${nextRoundNum} లెక్కింపు ఫలితాలు నవీకరించబడ్డాయి!`);
+        }
+
+        // Reset Data Function
+        function resetData() {
+            candidateData = JSON.parse(JSON.stringify(initialCandidateData));
+            roundData = JSON.parse(JSON.stringify(initialRoundData));
+            updateDashboard();
+            showToast('ఫలితాల సమాచారం రీసెట్ చేయబడింది.');
+        }
+
+        // Toggle Auto Simulation
+        function toggleAutoSimulate() {
+            const btnText = document.getElementById('simBtnText');
+            if (isAutoSimulating) {
+                clearInterval(autoInterval);
+                isAutoSimulating = false;
+                btnText.innerText = 'ఆటో అప్‌డేట్ ప్రారంభించు';
+                showToast('ఆటో అప్‌డేట్ నిలిపివేయబడింది');
+            } else {
+                startAutoSimulation();
+                isAutoSimulating = true;
+                btnText.innerText = 'ఆటో అప్‌డేట్ ఆపు';
+                showToast('ఆటో అప్‌డేట్ ప్రారంభించబడింది');
+            }
+        }
+
+        function startAutoSimulation() {
+            autoInterval = setInterval(() => {
+                if (roundData.length < 4) {
+                    simulateNextRound();
+                } else {
+                    clearInterval(autoInterval);
+                }
+            }, 8000);
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            initChart();
+            updateDashboard();
+            startAutoSimulation();
+        };
+    </script>
+</body>
+</html>
